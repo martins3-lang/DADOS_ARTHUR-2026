@@ -1,62 +1,82 @@
-CREATE DATABASE bancosenac;
+CREATE DATABASE banco_streaming;
 
-USE bancosenac;
+USE banco_streaming;
 
-CREATE TABLE vendas (
-data           DATE,
-produto        VARCHAR(100),
-categoria      VARCHAR(100),
-valor_unitario DECIMAL(10,2),
-quantidade     INT,
-cliente        VARCHAR(100),
-cidade         VARCHAR(100),
-estado         VARCHAR(2)
+CREATE TABLE usuarios (
+usuario_id     INT PRIMARY KEY,
+nome           VARCHAR(100),
+email          VARCHAR(100),
+pais           VARCHAR(100),
+plano          INT,
+data_cadastro  DATE
 );
+
+CREATE TABLE filmes(
+filme_id        INT PRIMARY KEY,
+titulo          VARCHAR(100),
+genero          VARCHAR(100),
+ano_lancamento  DATE,
+duracao_min     INT,
+classificacao   INT,
+nota_imdb       DECIMAL(10,2)
+);
+
+CREATE TABLE avaliacoes(
+avaliacao_id       INT PRIMARY KEY,
+usuario_id         INT,
+filme_id           INT,
+nota               DECIMAL(3,2),
+data_avaliacao     DATE,
+assistiu_completo  VARCHAR(100),
+FOREIGN KEY (usuario_id) REFERENCES usuarios(usuario_id),
+FOREIGN KEY (filme_id) REFERENCES filmes(filme_id ));
 
 SET GLOBAL local_infile = 1;
 
-LOAD DATA INFILE "C:/Users/arthur.smartins/Desktop/vendas.csv"
-INTO TABLE vendas
+LOAD DATA INFILE "C:/Users/arthur.smartins/Desktop/usuarios.csv"
+INTO TABLE usuarios
 FIELDS TERMINATED BY ','
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
-(data, produto, categoria, valor_unitario,
-quantidade, cliente, cidade, estado);
+(usuario_id, nome, email, pais,
+plano, data_cadastro);
 
+LOAD DATA INFILE "C:/Users/arthur.smartins/Desktop/avaliacoes.csv"
+INTO TABLE avaliacoes
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
+(avaliacao_id,usuario_id, filme_id, nota,
+data_avaliacao, assistiu_completo);
 
+LOAD DATA INFILE "C:/Users/arthur.smartins/Desktop/filmes.csv"
+INTO TABLE filmes
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
+(filme_id, titulo, genero, ano_lancamento, 
+duracao_min, classificacao, nota_imdb);
 
-SELECT * FROM vendas;
+select * from filmes;
 
-SELECT * FROM vendas
-WHERE categoria = "Informática";
+select * from avaliacoes;
 
-SELECT * FROM vendas
-WHERE estado = "RJ";
+select * from usuarios;
 
-SELECT produto, categoria, valor_unitario AS Valor_unitario
-FROM vendas
-GROUP BY produto
-HAVING valor_unitario > 500
-ORDER BY valor_unitario
-DESC;
+SELECT usuarios.nome, filmes.titulo, avaliacoes.nota 
+FROM avaliacoes
+JOIN usuarios ON usuarios.usuario_id = avaliacoes.usuario_id
+JOIN filmes ON filmes.filme_id = avaliacoes.filme_id;
 
-SELECT cliente, valor_unitario FROM vendas
-WHERE cliente = "Ana Souza";
+SELECT filmes.titulo, filmes.nota_imdb, usuarios.nome
+FROM filmes
+INNER JOIN usuarios ON usuario_id = filmes.filme_id;
 
-SELECT produto, estado, categoria, valor_unitario AS valor_unitario
-FROM vendas
-WHERE categoria = "Vestuário" AND estado = "PR";
+SELECT filmes.titulo, ROUND(AVG(avaliacoes.nota),2) as Nota_Média
+FROM filmes
+JOIN avaliacoes ON filmes.filme_id = avaliacoes.filme_id
+GROUP BY filmes.titulo;
 
-SELECT produto, categoria, estado, valor_unitario AS valor_unitario
-FROM vendas
-WHERE estado = "SP";
-
-SELECT *, SUM(valor_unitario * quantidade) AS Valor_Vendido
-FROM vendas
-GROUP BY produto;
-
-SELECT cliente, produto, quantidade, valor_unitario FROM vendas
-WHERE quantidade > "1";
 
 
 
